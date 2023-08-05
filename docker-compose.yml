@@ -1,0 +1,80 @@
+version: '3'
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
+
+services:
+
+  cl-postgres:
+    image: postgres
+    restart: always
+    container_name: cl-postgres
+    environment:
+      POSTGRES_PASSWORD: lvc_svc_task_pgres
+    ports:
+      - "5432:5432"
+
+  chainlink:
+    image: smartcontract/chainlink:2.3.0
+    restart: always
+    container_name: chainlink-4
+    platform: linux/x86_64
+    volumes:
+      - ~/.SimplyStakingTask:/chainlink
+      - ./config.toml:/chainlink/config.toml
+      - ./secrets.toml:/chainlink/secrets.toml
+      - ./.api:/chainlink/.api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["node" ,"-config", "/chainlink/config.toml", "-secrets", "/chainlink/secrets.toml", "start", "-a", "/chainlink/.api"]
+    ports:
+      - "6688:6688"
+
+  node-exporter:
+    container_name: nodeexporter
+    restart: always
+    hostname: nodeexporter
+    image: prom/node-exporter
+    ports:
+      - 9111:9100
+
+  alertmanager:
+    container_name: alertmanager
+    restart: always
+    hostname: alertmanager
+    image: prom/alertmanager
+    volumes:
+      - ./alertmanager.conf:/etc/alertmanager/alertmanager.conf
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.conf'
+    ports:
+      - 9093:9093
+
+  prometheus:
+    container_name: prometheus
+    restart: always
+    hostname: prometheus
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    links:
+      - alertmanager:alertmanager
+    ports:
+      - 9090:9090
+
+  grafana:
+    container_name: grafana
+    restart: always
+    hostname: grafana
+    image: grafana/grafana
+    volumes:
+      - ./grafana_datasources.yml:/etc/grafana/provisioning/datasources/all.yaml
+      - ./grafana_config.ini:/etc/grafana/config.ini
+      - grafana_data:/var/lib/grafana
+    ports:
+      - 3000:3000

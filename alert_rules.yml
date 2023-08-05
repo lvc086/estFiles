@@ -1,0 +1,17 @@
+## alert_rules.yml ##
+
+groups:  
+  - name: chainlink_balance_rule
+    rules:
+      - alert: LowBalanceAlert
+        # Condition for alerting
+        expr: eth_balance < 0.2
+        for: 5s
+        # Labels - additional labels to be attached to the alert
+        labels:
+          severity: 'critical'
+        # Annotation - additional informational labels to store more information
+        annotations:
+          title: 'Balance below 0.5ETH'
+          description: ' The chainlink balance dropped below 0.5ETH and is now {{ value }} ETH'
+      

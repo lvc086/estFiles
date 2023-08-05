@@ -1,0 +1,73 @@
+---
+  - name: "Ansible to orchestrate deployment"
+    hosts: localhost
+    connection: local
+    become: true
+    tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - software-properties-common
+      when: ansible_os_family == 'Debian'
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: latest
+      when: ansible_os_family == 'Debian'
+
+    - name: Install more required packages
+      become: true
+      apt:
+        name: ['python3-pip', 'libffi-dev', 'python3-dev', 'gcc', 'libc6-dev', 'libssl-dev', 'make']
+        update_cache: yes
+      when: ansible_os_family == "Debian"  # For Debian-based systems
+
+    - name: Install Docker Compose
+      package:
+        name: docker-compose
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: clone personal repo
+      git:
+        repo: https://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@github.com/lvc086/test.git
+        dest: /home/task/
+        clone: yes
+        update: yes
+
+    - name: Start Docker Compose
+      become: true
+      command: docker compose -f "/home/task/docker-compose.yml" up -d
+      tags: [docker-compose]
+
+
+
+ 
+#    - name: Start Docker Compose
+#      become: true
+#      command: docker compose -f "/home/lvc-msi/.SimplyStakingTask/docker-compose.yml" up -d
+#      tags: [docker-compose]
+

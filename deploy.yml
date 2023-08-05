@@ -51,16 +51,16 @@
         state: present
       when: ansible_os_family == 'Debian'
 
-    - name: clone personal repo
+    - name: clone public repo
       git:
-        repo: https://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@github.com/lvc086/test.git
-        dest: /home/task/
+        repo: https://github.com/lvc086/estFiles.git 
+        dest: /home/lvc-msi/ansible_downs/
         clone: yes
         update: yes
 
     - name: Start Docker Compose
       become: true
-      command: docker compose -f "/home/task/docker-compose.yml" up -d
+      command: docker compose -f "/home/lvc-msi/ansible_downs/docker-compose.yml" up -d
       tags: [docker-compose]
 
 
@@ -70,4 +70,5 @@
 #      become: true
 #      command: docker compose -f "/home/lvc-msi/.SimplyStakingTask/docker-compose.yml" up -d
 #      tags: [docker-compose]
+
 
